@@ -1,10 +1,19 @@
 /**
- * ARG Builder Pricing Products
- * 
- * These are the product definitions used for Stripe Checkout.
- * Price IDs will be created in Stripe Dashboard and referenced here.
- * Until real Stripe Price IDs are configured, these serve as the 
- * canonical product catalog for the application.
+ * ARG-Builder Pricing Products — Bootstrap Positioning (June 2026)
+ *
+ * One plan, two billing periods:
+ *  - Membership: $39/month
+ *  - Founding Member: $290/year (~38% off, price locked, first 100 seats)
+ *
+ * Stripe Dashboard setup:
+ *  - Product "ARG-Builder Membership" with two prices:
+ *    $39.00 USD recurring monthly  → env STRIPE_PRICE_MEMBERSHIP_MONTHLY
+ *    $290.00 USD recurring yearly  → env STRIPE_PRICE_MEMBERSHIP_ANNUAL
+ *
+ * Founding cap: enforced manually — when 100 Founding (annual) subscriptions
+ * exist, archive the $290 yearly price in Stripe and create the post-founding
+ * yearly price. Existing subscribers keep $290 permanently (Stripe keeps
+ * legacy prices on active subscriptions).
  */
 
 export interface ProductTier {
@@ -15,84 +24,59 @@ export interface ProductTier {
   annualPrice: number; // in cents (per month, billed annually)
   features: string[];
   targetTeamSize: string;
-  stripePriceIdMonthly: string | null; // Set after creating in Stripe Dashboard
-  stripePriceIdAnnual: string | null; // Set after creating in Stripe Dashboard
+  stripePriceIdMonthly: string | null;
+  stripePriceIdAnnual: string | null;
 }
 
+/** Founding Member annual total, in cents — $290/year, price locked permanently. */
+export const FOUNDING_ANNUAL_TOTAL = 29000;
+
+/** Founding seats cap — a real commitment. When reached, retire the price in Stripe. */
+export const FOUNDING_SEAT_CAP = 100;
+
 export const PRODUCTS: Record<string, ProductTier> = {
-  starter: {
-    id: "starter",
-    name: "Starter",
-    description: "For growing teams that need structured operational knowledge",
-    monthlyPrice: 200000, // $2,000/month
-    annualPrice: 170000, // $1,700/month billed annually (15% off)
+  membership: {
+    id: "membership",
+    name: "Membership",
+    description: "Full access to the complete operating reference",
+    monthlyPrice: 3900, // $39/month
+    annualPrice: 2417, // $290/year ≈ $24.17/month equivalent (Founding Member)
     features: [
-      "Up to 200 employees",
-      "AI-powered document generation",
-      "Knowledge graph visualization",
-      "Full-text search with relevance scoring",
-      "5 custom workflows",
-      "Basic analytics dashboard",
-      "Email support",
+      "All operating documents",
+      "Full-text search across the library",
+      "Collections & reading paths",
+      "Annotations & bookmarks",
+      "Version history & freshness status",
+      "PDF, DOCX & zip export",
+      "Every update as the library grows",
+      "Founding (annual): price locked at $290 permanently",
+      "Founding (annual): direct line to the founder",
+      "Cancel anytime",
     ],
-    targetTeamSize: "50–200 employees",
-    stripePriceIdMonthly: process.env.STRIPE_PRICE_STARTER_MONTHLY || null,
-    stripePriceIdAnnual: process.env.STRIPE_PRICE_STARTER_ANNUAL || null,
-  },
-  professional: {
-    id: "professional",
-    name: "Professional",
-    description: "For scaling organizations with complex operational needs",
-    monthlyPrice: 500000, // $5,000/month
-    annualPrice: 425000, // $4,250/month billed annually (15% off)
-    features: [
-      "Up to 1,000 employees",
-      "Everything in Starter",
-      "Multi-workspace support",
-      "Advanced AI summarization & translation",
-      "Unlimited custom workflows",
-      "Advanced analytics & reporting",
-      "Priority support + dedicated CSM",
-      "SSO / SAML integration",
-    ],
-    targetTeamSize: "200–1,000 employees",
-    stripePriceIdMonthly: process.env.STRIPE_PRICE_PRO_MONTHLY || null,
-    stripePriceIdAnnual: process.env.STRIPE_PRICE_PRO_ANNUAL || null,
-  },
-  enterprise: {
-    id: "enterprise",
-    name: "Enterprise",
-    description: "For large organizations requiring full operational intelligence",
-    monthlyPrice: 1000000, // $10,000/month
-    annualPrice: 850000, // $8,500/month billed annually (15% off)
-    features: [
-      "Unlimited employees",
-      "Everything in Professional",
-      "Custom AI model training",
-      "On-premise deployment option",
-      "Custom integrations & API access",
-      "Compliance reporting (SOC 2, HIPAA)",
-      "24/7 white-glove support",
-      "Quarterly business reviews",
-    ],
-    targetTeamSize: "1,000+ employees",
-    stripePriceIdMonthly: process.env.STRIPE_PRICE_ENTERPRISE_MONTHLY || null,
-    stripePriceIdAnnual: process.env.STRIPE_PRICE_ENTERPRISE_ANNUAL || null,
+    targetTeamSize: "Solo founders, teams of 1–20, fractional operators",
+    stripePriceIdMonthly: process.env.STRIPE_PRICE_MEMBERSHIP_MONTHLY || null,
+    stripePriceIdAnnual: process.env.STRIPE_PRICE_MEMBERSHIP_ANNUAL || null,
   },
 };
 
+/**
+ * No implementation fees in the bootstrap model — white-label and teams are
+ * conversations, not SKUs, until demand proves otherwise. Keys are kept so
+ * stripeRouter's createImplementationCheckout fails with a clear "not
+ * configured" error instead of a crash if ever called.
+ */
 export const IMPLEMENTATION_FEES = {
   standard: {
-    name: "Standard Implementation",
-    price: 2500000, // $25,000 one-time
-    description: "Full AI-powered operational audit and system build (12–19 hours delivery)",
-    stripePriceId: process.env.STRIPE_PRICE_IMPL_STANDARD || null,
+    name: "Standard Implementation (retired)",
+    price: 0,
+    description: "Not offered in the bootstrap model",
+    stripePriceId: null as string | null,
   },
   custom: {
-    name: "Custom Implementation",
-    price: 5000000, // $50,000–$100,000
-    description: "Complex multi-department deployment with custom integrations",
-    stripePriceId: process.env.STRIPE_PRICE_IMPL_CUSTOM || null,
+    name: "Custom Implementation (retired)",
+    price: 0,
+    description: "Not offered in the bootstrap model",
+    stripePriceId: null as string | null,
   },
 };
 
