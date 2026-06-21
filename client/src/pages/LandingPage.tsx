@@ -1,12 +1,10 @@
-import { trpc } from '@/lib/trpc';
 import { useAuth } from '@/_core/hooks/useAuth';
 import { Link } from 'wouter';
 import {
   Search, Layers, History, FolderOpen, Download, Bookmark,
-  CheckCircle2, ArrowRight,
+  CheckCircle2, ArrowRight, MessageSquare, BellRing,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
 import { totalDocuments, categoryCounts } from '@/lib/documentCatalog';
 
 const LOGO_IMG = '/manus-storage/logo-icon_7cc98e89.png';
@@ -18,6 +16,12 @@ const STATS = [
   { n: String(totalDocuments), label: 'structured operating documents, each one decision-ready' },
   { n: String(FUNCTION_COUNT), label: 'business functions covered, from pricing to security compliance' },
   { n: '0', label: 'documents you have to write before your company has an operating manual' },
+];
+
+const NEXUS_OS = [
+  { icon: MessageSquare, title: 'Ask once', desc: 'One inbox. One prompt. The playbook fires across Slack, Notion, Gmail.' },
+  { icon: CheckCircle2, title: 'Approvals', desc: 'Human-in-the-loop where judgement matters. Quiet automation everywhere else.' },
+  { icon: BellRing, title: 'Heartbeat', desc: 'Recurring loops run on their own. You see the result, not the run.' },
 ];
 
 const AUDIENCES = [
@@ -50,31 +54,6 @@ const FAQS = [
 
 export default function LandingPage() {
   const { user } = useAuth({ redirectOnUnauthenticated: false });
-  const { data: stripeConfig } = trpc.stripe.isConfigured.useQuery();
-  const createCheckout = trpc.stripe.createCheckoutSession.useMutation({
-    onSuccess: (data) => {
-      if (data.checkoutUrl) {
-        window.open(data.checkoutUrl, '_blank');
-        toast.info('Redirecting to checkout...');
-      }
-    },
-    onError: (err) => {
-      toast.error(err.message);
-    },
-  });
-
-  const subscribe = (billingPeriod: 'monthly' | 'annual') => {
-    if (!user) {
-      window.location.href = '/login';
-      return;
-    }
-    if (!stripeConfig?.configured) {
-      toast.error('Payments are not enabled yet. Email hello@argbuilder.io and we will set you up directly.');
-      return;
-    }
-    createCheckout.mutate({ tierId: 'membership', billingPeriod });
-  };
-
   const sortedCategories = Object.entries(categoryCounts).sort((a, b) => b[1] - a[1]);
 
   return (
@@ -87,10 +66,10 @@ export default function LandingPage() {
             <span className="text-xl font-bold tracking-tight">ARG-Builder</span>
           </div>
           <div className="hidden md:flex items-center gap-8 text-sm text-gray-400">
-            <a href="#why" className="hover:text-white transition-colors">Why</a>
+            <a href="#nexus-os" className="hover:text-white transition-colors">Nexus OS</a>
             <a href="#library" className="hover:text-white transition-colors">Library</a>
-            <a href="#platform" className="hover:text-white transition-colors">Platform</a>
-            <a href="#pricing" className="hover:text-white transition-colors">Pricing</a>
+            <a href="#founder" className="hover:text-white transition-colors">Founder</a>
+            <a href="#cohort" className="hover:text-white transition-colors">Cohort</a>
             <a href="#faq" className="hover:text-white transition-colors">FAQ</a>
           </div>
           <div className="flex items-center gap-3">
@@ -101,9 +80,9 @@ export default function LandingPage() {
                 </Button>
               </Link>
             ) : (
-              <a href="#pricing">
+              <a href="#cohort">
                 <Button size="sm" className="bg-teal-500 hover:bg-teal-400 text-black font-semibold">
-                  Become a Founding Member
+                  Apply
                 </Button>
               </a>
             )}
@@ -117,36 +96,92 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto relative text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-teal-500/10 border border-teal-500/20 mb-8">
             <span className="w-2 h-2 rounded-full bg-teal-400" />
-            <span className="text-sm font-medium text-teal-300">The complete operating reference for small companies</span>
+            <span className="text-sm font-medium text-teal-300">Founding cohort — 10 seats — opens June 2026</span>
           </div>
           <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold leading-[1.1] mb-6 tracking-tight">
-            Every playbook your company needs.<br />
+            The playbook<span className="text-gray-500"> &amp; </span>the runtime that runs it.<br />
             <span className="bg-gradient-to-r from-teal-400 via-cyan-400 to-teal-300 bg-clip-text text-transparent">
-              Already written. Already structured.
+              Already written. Already executing.
             </span>
           </h1>
           <p className="text-lg sm:text-xl text-gray-400 max-w-3xl mx-auto mb-10 leading-relaxed">
-            ARG-Builder is an operating reference platform: {totalDocuments} structured documents covering
-            all {FUNCTION_COUNT} functions of a running company — sales, marketing, engineering, finance,
-            customer success, security, and more. Searchable, versioned, and organized the way a COO would build it.
+            ARG-Builder is two things in one workspace. <strong className="text-white font-medium">Playbooks</strong> — {totalDocuments} structured operating
+            documents covering all {FUNCTION_COUNT} functions of a running company.
+            <strong className="text-white font-medium"> Nexus OS</strong> — the runtime that executes them across Slack, Notion and
+            Gmail. Two of my own businesses already run on it.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href="#pricing">
+            <a href="#cohort">
               <Button size="lg" className="bg-teal-500 hover:bg-teal-400 text-black font-semibold px-8 py-6 text-lg">
-                Become a Founding Member <ArrowRight className="w-5 h-5 ml-2" />
-              </Button>
-            </a>
-            <a href="#library">
-              <Button size="lg" variant="outline" className="border-white/20 text-white hover:bg-white/5 px-8 py-6 text-lg">
-                Browse the Library
+                Apply for the founding cohort <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
             </a>
           </div>
-          <p className="mt-5 text-sm text-gray-600 font-mono">{totalDocuments} documents · {FUNCTION_COUNT} functions · one decision</p>
+          <p className="mt-5 text-sm text-gray-600 font-mono">{totalDocuments} documents · {FUNCTION_COUNT} functions · 10 founding seats</p>
           <div className="relative mt-16 mx-auto max-w-5xl">
             <div className="absolute -inset-4 bg-gradient-to-r from-teal-500/20 via-cyan-500/10 to-teal-500/20 rounded-2xl blur-3xl" />
             <div className="relative rounded-xl overflow-hidden border border-white/10 shadow-2xl">
               <img src={HERO_IMG} alt="ARG-Builder platform" className="w-full object-contain" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Nexus OS — the runtime that distinguishes us from a wiki */}
+      <section id="nexus-os" className="py-24 px-4 bg-gradient-to-b from-transparent to-white/[0.02]">
+        <div className="max-w-6xl mx-auto text-center">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-500/10 border border-teal-500/20 text-teal-400 text-xs font-medium mb-6">
+            Nexus OS — the runtime
+          </div>
+          <h2 className="text-3xl sm:text-4xl font-bold mb-4">A wiki tells you what to do. Nexus OS does it.</h2>
+          <p className="text-lg text-gray-400 max-w-3xl mx-auto mb-12 leading-relaxed">
+            Notion gives you a blank page. ChatGPT gives you advice. ARG-Builder gives you the playbook and
+            the runtime that fires it — across the tools you already use. Three primitives, working quietly underneath.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {NEXUS_OS.map((p) => (
+              <div key={p.title} className="p-8 rounded-xl bg-white/[0.03] border border-white/5 hover:border-teal-500/30 transition-colors text-left">
+                <div className="w-11 h-11 rounded-lg bg-teal-500/10 border border-teal-500/20 flex items-center justify-center mb-5">
+                  <p.icon className="w-5 h-5 text-teal-400" />
+                </div>
+                <h3 className="text-lg font-semibold mb-2">{p.title}</h3>
+                <p className="text-sm text-gray-400">{p.desc}</p>
+              </div>
+            ))}
+          </div>
+          <p className="mt-10 text-sm text-gray-500">Founding-cohort members get Nexus OS early access. Not a separate purchase.</p>
+        </div>
+      </section>
+
+      {/* Founder — the unattackable asset */}
+      <section id="founder" className="py-24 px-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-500/10 border border-teal-500/20 text-teal-400 text-xs font-medium mb-6">
+            Who is building this
+          </div>
+          <h2 className="text-3xl sm:text-4xl font-bold mb-8 leading-tight">
+            Twenty-five years curating experiences that can't be templated.<br />
+            <span className="text-gray-400 font-normal text-2xl sm:text-3xl">Now encoded into the systems that run them.</span>
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-[1fr_2fr] gap-10 items-start">
+            <div className="rounded-xl bg-white/[0.03] border border-white/5 aspect-[4/5] flex items-center justify-center text-gray-600 text-sm">
+              {/* Replace with portrait at /manus-storage/founder-portrait.jpg */}
+              Founder portrait
+            </div>
+            <div className="space-y-4 text-gray-400 leading-relaxed">
+              <p>
+                <strong className="text-white font-medium">Marrakech, 1995.</strong> Diploma in Computing & Management at a moment when most of Morocco hadn't met a computer. Online by 1998 — one of the earliest. The reflex of the early-web operator never went anywhere.
+              </p>
+              <p>
+                <strong className="text-white font-medium">The next 25 years.</strong> VIP tour guide, photographer, luxury travel curator, creative director. On set with Asterix, with Alexander, watching how a 200-person production runs without anyone shouting. Languages, history, art, the texture of how craft is actually made.
+              </p>
+              <p>
+                <strong className="text-white font-medium">Now.</strong> I run two businesses — <a href="https://riadandroutes.com" className="text-teal-400 hover:text-teal-300">Riad&Routes</a> (luxury Moroccan travel) and ArtKech (creative studio). I run them through Nexus OS, on the playbooks you see here. The dormant tech background isn't dormant anymore.
+              </p>
+              <p className="italic text-gray-500 border-l-2 border-teal-500/30 pl-4">
+                I'm not selling software. I'm selling the playbook and the runtime. Together, that's capacity — the invisible layer where work gets done.
+              </p>
+              <p className="text-sm text-gray-600">— Jamal Boularhbar, Founder</p>
             </div>
           </div>
         </div>
@@ -255,56 +290,56 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Pricing */}
-      <section id="pricing" className="py-24 px-4">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl sm:text-4xl font-bold mb-3">One plan. Everything.</h2>
-          <p className="text-lg text-gray-400 mb-14">No tiers, no per-seat math, no "Contact us."</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Monthly */}
-            <div className="p-8 rounded-2xl bg-white/[0.03] border border-white/10 text-left flex flex-col">
-              <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Membership</h3>
-              <div className="text-5xl font-bold my-4">$39<span className="text-base text-gray-400 font-medium">/month</span></div>
-              <ul className="space-y-3 mb-8 flex-1">
-                {[`Full access to all ${totalDocuments} documents`, 'Search, collections, annotations', 'PDF, DOCX & zip export', 'Every update as the library grows', 'Cancel anytime'].map((f) => (
-                  <li key={f} className="flex items-start gap-2.5 text-sm text-gray-400">
-                    <CheckCircle2 className="w-4 h-4 text-teal-400 mt-0.5 shrink-0" />{f}
-                  </li>
-                ))}
-              </ul>
-              <Button
-                variant="outline"
-                className="w-full border-white/20 text-white hover:bg-white/5"
-                onClick={() => subscribe('monthly')}
-                disabled={createCheckout.isPending}
-              >
-                {createCheckout.isPending ? 'Processing...' : 'Start now'}
-              </Button>
-            </div>
-            {/* Founding annual */}
-            <div className="relative p-8 rounded-2xl bg-gradient-to-b from-teal-500/10 to-white/[0.02] border border-teal-500/30 text-left flex flex-col">
-              <span className="absolute -top-3 left-7 px-3.5 py-1 rounded-full bg-teal-500 text-black text-xs font-bold">Founding Member</span>
-              <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mt-1">Annual</h3>
-              <div className="text-5xl font-bold mt-4 mb-1">$290<span className="text-base text-gray-400 font-medium">/year</span></div>
-              <p className="text-teal-400 text-sm font-semibold mb-4">Save 38% — price locked permanently</p>
-              <ul className="space-y-3 mb-8 flex-1">
-                {['Everything in Membership', 'Price locked at $290 — forever', 'Direct line to the founder', 'Your requests shape what gets documented next'].map((f) => (
-                  <li key={f} className="flex items-start gap-2.5 text-sm text-gray-400">
-                    <CheckCircle2 className="w-4 h-4 text-teal-400 mt-0.5 shrink-0" />{f}
-                  </li>
-                ))}
-              </ul>
-              <Button
-                className="w-full bg-teal-500 hover:bg-teal-400 text-black font-semibold"
-                onClick={() => subscribe('annual')}
-                disabled={createCheckout.isPending}
-              >
-                {createCheckout.isPending ? 'Processing...' : 'Become a Founding Member'}
-                {!createCheckout.isPending && <ArrowRight className="w-4 h-4 ml-2" />}
-              </Button>
-            </div>
+      {/* Cohort — apply, do not self-serve */}
+      <section id="cohort" className="py-24 px-4">
+        <div className="max-w-3xl mx-auto text-center">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-500/10 border border-teal-500/20 text-teal-400 text-xs font-medium mb-6">
+            Founding cohort — 10 seats, then closed
           </div>
-          <p className="text-sm text-gray-600 mt-7">Founding pricing ends when the first 100 seats are taken.</p>
+          <h2 className="text-3xl sm:text-4xl font-bold mb-3">10 operators. One season together.</h2>
+          <p className="text-lg text-gray-400 mb-12 leading-relaxed">
+            Founding members co-design one Autopilot for the highest-leverage operational loop in their business,
+            get the full Playbooks library, get Nexus OS early access, and get a standing weekly line to me while
+            the system matures. Six-month commitment. Capped at ten. When the cohort closes, the founding tier closes with it.
+          </p>
+          <div className="p-8 rounded-2xl bg-gradient-to-b from-teal-500/10 to-white/[0.02] border border-teal-500/30 text-left">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <div>
+                <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Commitment</p>
+                <p className="text-lg text-white font-medium">6 months</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Seats</p>
+                <p className="text-lg text-white font-medium">10 (then closed)</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">Window</p>
+                <p className="text-lg text-white font-medium">June 2026 — NY / SF</p>
+              </div>
+            </div>
+            <ul className="space-y-3 mb-8">
+              {[
+                'Full Playbooks library + every future update',
+                'Nexus OS early access — your loop is the first one we build',
+                'Weekly direct line to the founder (real, not delegated)',
+                'Naming credit as a founding cohort member at public launch',
+                'In exchange: case-study rights, monthly written feedback, a quote at launch',
+              ].map((f) => (
+                <li key={f} className="flex items-start gap-2.5 text-sm text-gray-300">
+                  <CheckCircle2 className="w-4 h-4 text-teal-400 mt-0.5 shrink-0" />{f}
+                </li>
+              ))}
+            </ul>
+            <a href="mailto:hello@argbuilder.io?subject=Founding%20cohort%20application&body=Business%3A%0AWebsite%3A%0AThe%20one%20operational%20loop%20I%27d%20hand%20to%20an%20Autopilot%20first%3A%0A">
+              <Button
+                size="lg"
+                className="w-full bg-teal-500 hover:bg-teal-400 text-black font-semibold py-6 text-base"
+              >
+                Apply for the cohort <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
+            </a>
+            <p className="text-xs text-gray-600 mt-4 text-center">Applications reviewed within 48 hours. No checkout, no seat math — a conversation.</p>
+          </div>
         </div>
       </section>
 
@@ -329,21 +364,20 @@ export default function LandingPage() {
       <section className="py-28 px-4 relative">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(45,212,191,0.08),transparent_70%)]" />
         <div className="max-w-3xl mx-auto text-center relative">
-          <h2 className="text-3xl sm:text-5xl font-bold mb-5">Your company, documented.</h2>
+          <h2 className="text-3xl sm:text-5xl font-bold mb-5">The playbook and the runtime.</h2>
           <p className="text-lg text-gray-400 mb-10">
-            The companies that scale cleanly are the ones that run on structure instead of memory.
-            The structure is built. Deploy it.
+            Two of my own businesses already run on it. Ten operators can join the first cohort.
+            After that, the founding tier closes.
           </p>
-          <Button
-            size="lg"
-            className="bg-teal-500 hover:bg-teal-400 text-black font-semibold px-8 py-6 text-lg"
-            onClick={() => subscribe('annual')}
-            disabled={createCheckout.isPending}
-          >
-            {createCheckout.isPending ? 'Processing...' : 'Become a Founding Member — $290/year'}
-            {!createCheckout.isPending && <ArrowRight className="w-5 h-5 ml-2" />}
-          </Button>
-          <p className="mt-6 text-sm text-gray-600 font-mono">{totalDocuments} documents. {FUNCTION_COUNT} functions. One decision.</p>
+          <a href="#cohort">
+            <Button
+              size="lg"
+              className="bg-teal-500 hover:bg-teal-400 text-black font-semibold px-8 py-6 text-lg"
+            >
+              Apply for the founding cohort <ArrowRight className="w-5 h-5 ml-2" />
+            </Button>
+          </a>
+          <p className="mt-6 text-sm text-gray-600 font-mono">{totalDocuments} documents · {FUNCTION_COUNT} functions · 10 seats</p>
         </div>
       </section>
 
@@ -352,7 +386,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <img src={LOGO_IMG} alt="ARG-Builder" className="w-7 h-7 rounded-lg" />
-            <span className="text-sm text-gray-500">ARG-Builder — the operating reference for companies that run on structure.</span>
+            <span className="text-sm text-gray-500">ARG-Builder — Playbooks &amp; Nexus OS. Autonomous Capacity, not software.</span>
           </div>
           <div className="flex items-center gap-6 text-xs text-gray-600">
             <span>&copy; {new Date().getFullYear()} ARG-Builder</span>
